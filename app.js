@@ -24,7 +24,7 @@ server.post('/api/messages', connector.listen())
 //--- INIT BOT
 var bot = new builder.UniversalBot(connector, function (session, args) {
     // Default Handling: When nothing else matches
-    if (session.message.attachments) {
+    if (hasMessageAttachment(session)) {
         session.replaceDialog('DocumentUploadDialog')
     } else {
         session.send(
@@ -36,6 +36,10 @@ var bot = new builder.UniversalBot(connector, function (session, args) {
 })
 bot.set('storage', inMemoryStorage)
 
+const hasMessageAttachment = (session) => (
+    session.message.attachments && session.message.attachments.length > 0
+)
+
 // extract LUIS settings from environment variables
 var luisAppId = process.env.LuisAppId
 var luisAPIKey = process.env.LuisAPIKey
@@ -46,14 +50,14 @@ const LuisModelUrl =
 
 // add LUIS recognizer to the bot for reacting to intents
 var recognizer = new builder.LuisRecognizer(LuisModelUrl)
-  .onEnabled(function (session, callback) {
-    if (session.message.attachments) {
-      // -> do not send to LUIS
-      callback(null, false)
-    } else {
-      callback(null, true)
-    }
-})
+    .onEnabled(function (session, callback) {
+        if (hasMessageAttachment(session)) {
+            // -> do not send to LUIS
+            callback(null, false)
+        } else {
+            callback(null, true)
+        }
+    })
 bot.recognizer(recognizer)
 
 
@@ -103,9 +107,8 @@ bot.dialog('GreetingDialog',
 
 bot.dialog('DocumentUploadDialog',
     (session) => {
-        let msg = session.message
-        if (msg.attachments && msg.attachments.length > 0) {
-            session.send('Thank you for `%s`', msg.attachments[0].contentUrl)
+        if (hasMessageAttachment(session)) {
+            session.send('Thank you for `%s`', session.message.attachments[0].contentUrl)
         } else {
             session.send(
                 'You can drop me a file at any time with the attachment-button in the lower left corner.'
