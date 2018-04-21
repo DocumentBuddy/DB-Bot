@@ -191,8 +191,8 @@ bot.dialog('FetchDocumentBySenderDialog', [
             session.dialogData.sender = result.response
         }
 
-        session.send('Found 17 documents from %s.', session.dialogData.sender)
-        session.replaceDialog('InternalResultsDialog', {'a':17})
+        api.getDocumentsByAuthor(session, session.dialogData.sender)
+        session.endDialog()
     }
 ]).triggerAction({
     matches: 'Documents.Fetch.BySender'
@@ -247,8 +247,8 @@ bot.dialog('FetchDocumentByTypeDialog', [
             session.dialogData.type = result.response
         }
 
-        session.send('Found 17 %s documents.', session.dialogData.type)
-        session.replaceDialog('InternalResultsDialog', {'a':17})
+        api.getDocumentsByDoctype(session, session.dialogData.type)
+        session.endDialog()
     }
 ]).triggerAction({
     matches: 'Documents.Fetch.ByType'
@@ -258,24 +258,41 @@ bot.dialog('FetchDocumentByTypeDialog', [
 //--- "INTERNAL" CALLBACKS FOR CARD BUTTONS
 bot.dialog('InternalResultsDialog', [
     function (session, args, next) {
-        console.log(args)
-        let msg = new builder.Message(session)
-        msg.attachmentLayout(builder.AttachmentLayout.carousel)
-        let attachments = []
-        for (var i = 0; i < args.length; i++) {
-            let element = args[i]
-            attachments.push(new builder.HeroCard(session)
-                .title(element.doctype)
-                //.subtitle('20.04.2017 13:37')
-                //.text('#rnv #data #hackathon')
-                .buttons([
-                    builder.CardAction.postBack(session, 'DL ' + element.id, 'Donwload File'),
-                    builder.CardAction.postBack(session, 'SUM ' + element.id, 'Show Summary')
-                ])
-            )
+        if (args.length == 0) {
+            session.send('\uD83D\uDE41 ' /* frowning emoji */ + 'Sorry, no results available.')
+            session.endDialog()
+        } else {
+            let msg = new builder.Message(session)
+            let attachments = []
+
+            msg.attachmentLayout(builder.AttachmentLayout.carousel)
+
+            for (var i = 0; i < args.length; i++) {
+                let element = args[i]
+                let linkElements = element.link.split('/')
+                let title = linkElements[linkElements.length - 1]
+                let date = element.date
+                let pagesText = element.pages + ' page' + (element.pages > 1 ? 's' : '')
+                let sender = element.author
+
+                attachments.push(new builder.HeroCard(session)
+                    .title(title)
+                    .subtitle(
+                        'added on ' + date +
+                        '  \u25AA  ' + /* small black square */
+                        pagesText
+                    )
+                    .text('sent by ' + sender)
+                    .buttons([
+                        builder.CardAction.postBack(session, 'DL ' + element.id, 'Donwload File'),
+                        builder.CardAction.postBack(session, 'SUM ' + element.id, 'Show Summary')
+                    ])
+                )
+            }
+
+            msg.attachments(attachments)
+            session.send(msg).endDialog()
         }
-        msg.attachments(attachments)
-        session.send(msg).endDialog()
     }
 ])
 
@@ -291,7 +308,7 @@ bot.dialog('InternalDownloadDialog', [
 bot.dialog('InternalSummaryDialog', [
     function (session, args, next) {
         let id = args.intent.matched[0].substr(4)
-        session.send('Here you go, summarized: %s', summary)
+        session.send('haha  n o  , not yet')  // TO DO later
         session.endConversation()
     }
 ]).triggerAction({ matches: /(SUM)(\s|.)*/i });
