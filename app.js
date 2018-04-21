@@ -42,15 +42,6 @@ bot.recognizer(recognizer)
 
 
 //--- INTENT SPECIFIC DIALOG HANDLING
-bot.dialog('GreetingDialog',
-    (session) => {
-        session.send('Recognized as "Greeting" intent.', session.message.text)
-        session.endDialog()
-    }
-).triggerAction({
-    matches: 'Greeting'
-})
-
 bot.dialog('HelpDialog',
     (session) => {
         session.send('Recognized as "Help" intent.', session.message.text)
@@ -67,4 +58,33 @@ bot.dialog('CancelDialog',
     }
 ).triggerAction({
     matches: 'Cancel'
+})
+
+bot.dialog('FetchDocumentsDialog', [
+    function (session, args, next) {
+        let intent = args.intent
+        let senderFromIntnet = builder.EntityRecognizer.findEntity(intent.entities,
+            'Document.Sender.Name'
+        )
+
+        session.dialogData.sender = {}
+        session.dialogData.sender.name = senderFromIntnet ? senderFromIntnet.entity : null
+
+        session.send('Okay, lets get the documents.')
+        if (!session.dialogData.sender.name) {
+            builder.Prompts.text(session, "From which sender should I search documents?")
+        } else {
+            next()
+        }
+    },
+    function (session, result) {
+        if (result && result.response) {
+            session.dialogData.sender.name = result.response
+        }
+
+        session.send('Found 17 documents from %s', session.dialogData.sender.name)
+        session.endDialog()
+    }
+]).triggerAction({
+    matches: 'Documents.Fetch'
 })
