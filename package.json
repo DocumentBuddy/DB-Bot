@@ -1,6 +1,6 @@
 {
-  "name": "luisbot",
-  "version": "1.0.0",
+  "name": "DB-Bot",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "dependencies": {
@@ -16,5 +16,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "UNLICENSED"
 }
