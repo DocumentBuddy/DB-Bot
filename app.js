@@ -68,7 +68,6 @@ bot.dialog('HelpDialog',
         session.send(
             'You can ask me whatever you need about your documents and I will surely help you.'
         )
-        session.endConversation()
     }
 ).triggerAction({
     matches: 'Help'
@@ -192,7 +191,7 @@ bot.dialog('FetchDocumentBySenderDialog', [
         }
 
         session.send('Found 17 documents from %s.', session.dialogData.sender)
-        session.endConversation()
+        session.replaceDialog('InternalResultsDialog', {'a':17})
     }
 ]).triggerAction({
     matches: 'Documents.Fetch.BySender'
@@ -220,7 +219,7 @@ bot.dialog('FetchDocumentByKeywordsDialog', [
         }
 
         session.send('Found 17 documents about %s.', session.dialogData.keyword)
-        session.endConversation()
+        session.replaceDialog('InternalResultsDialog', {'a':17})
     }
 ]).triggerAction({
     matches: 'Documents.Fetch.ByKeyword'
@@ -248,8 +247,59 @@ bot.dialog('FetchDocumentByTypeDialog', [
         }
 
         session.send('Found 17 %s documents.', session.dialogData.type)
-        session.endConversation()
+        session.replaceDialog('InternalResultsDialog', {'a':17})
     }
 ]).triggerAction({
     matches: 'Documents.Fetch.ByType'
 })
+
+
+//--- "INTERNAL" CALLBACKS FOR CARD BUTTONS
+bot.dialog('InternalResultsDialog', [
+    function (session, args, next) {
+        console.log(args)
+        var msg = new builder.Message(session)
+        msg.attachmentLayout(builder.AttachmentLayout.carousel)
+        msg.attachments([
+            new builder.HeroCard(session)
+                .title('Letter 2443A')
+                .subtitle('20.04.2017 13:37')
+                .text('#rnv #data #hackathon')
+                .buttons([
+                    builder.CardAction.postBack(session, 'DL Letter 2443A', 'Donwload File'),
+                    builder.CardAction.postBack(session, 'SUM Letter 2443A', 'Show Summary')
+                ])
+            ,
+            new builder.HeroCard(session)
+                .title('Invoice 778C')
+                .subtitle('20.04.2017 14:20')
+                .text('#catering #food #expensive')
+                .buttons([
+                    builder.CardAction.postBack(session, 'DL Invoice 778C', 'Donwload File'),
+                    builder.CardAction.postBack(session, 'SUM Invoice 778C', 'Show Summary')
+                ])
+        ])
+        session.send(msg).endDialog()
+    }
+])
+
+bot.dialog('InternalDownloadDialog', [
+    function (session, args, next) {
+        let documentName = args.intent.matched[0].substr(3)
+        let url = 'https://webchat.botframework.com/attachments/AnQcwJVX1uNDAhDVKhlRfz/0000015/0/QUOTEPLUS_IT_HSB_BSDR_14818135_2013-07-25.pdf?t=ArQBMmW43R4.dAA.QQBuAFEAYwB3AEoAVgBYADEAdQBOAEQAQQBoAEQAVgBLAGgAbABSAGYAegAtADAAMAAwADAAMAAxADUA.vS6WwlDZ0wE.lQLqarP-jcA.anm83ZS26nvPB6UJ7UWabr01ySR8EAds2PeZFBSqvmY'
+        var linkMessage = new builder.Message(session)
+            .text('Here you go: [Download %s](%s)', documentName, url)
+            .textFormat('markdown')
+        session.send(linkMessage)
+        session.endConversation()
+    }
+]).triggerAction({ matches: /(DL)(\s|.)*/i });
+
+bot.dialog('InternalSummaryDialog', [
+    function (session, args, next) {
+        let documentName = args.intent.matched[0].substr(4)
+        let summary = 'Lorem ipsum dolar sit amed.'
+        session.send('Here you go, %s summarized: %s', documentName, summary)
+        session.endConversation()
+    }
+]).triggerAction({ matches: /(SUM)(\s|.)*/i });
