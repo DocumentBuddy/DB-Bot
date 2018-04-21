@@ -1,7 +1,9 @@
-var restify = require('restify')
-var builder = require('botbuilder')
-var botbuilder_azure = require("botbuilder-azure")
-var inMemoryStorage = new builder.MemoryBotStorage()
+const restify = require('restify')
+const builder = require('botbuilder')
+const botbuilder_azure = require('botbuilder-azure')
+const inMemoryStorage = new builder.MemoryBotStorage()
+
+const utils = require('./utils')
 
 
 //--- START CONNECTIONS
@@ -23,8 +25,10 @@ server.post('/api/messages', connector.listen())
 var bot = new builder.UniversalBot(connector, function (session, args) {
     // Default Handling: When nothing else matches
     session.send(
-        '\uD83E\uDD14 I don\'t understand what you mean with \'%s\', sorry.', session.message.text
+        '\uD83E\uDD14'  /* thinking emoji */
+        + ' I don\'t understand what you mean, sorry.\nPlease try rephrasing your question.'
     )
+    session.endConversation()
 })
 bot.set('storage', inMemoryStorage)
 
@@ -44,8 +48,10 @@ bot.recognizer(recognizer)
 //--- INTENT SPECIFIC DIALOG HANDLING
 bot.dialog('HelpDialog',
     (session) => {
-        session.send('Recognized as "Help" intent.', session.message.text)
-        session.endDialog()
+        session.send(
+            'You can ask me whatever you need about your documents and I will surely help you.'
+        )
+        session.endConversation()
     }
 ).triggerAction({
     matches: 'Help'
@@ -53,38 +59,151 @@ bot.dialog('HelpDialog',
 
 bot.dialog('CancelDialog',
     (session) => {
-        session.send('Recognized as "Cancel" intent.', session.message.text)
-        session.endDialog()
+        var responses = [
+            'okay, aborted.',
+            'All right, I will drop that.',
+            'ok, see you later.',
+            'ok, anything else I can do?',
+            'okay, anything else?'
+        ]
+        session.send(utils.choose(responses))
+        session.endConversation()
     }
 ).triggerAction({
     matches: 'Cancel'
 })
 
+bot.dialog('GreetingDialog',
+    (session) => {
+        var responses = [
+            'Hey there! How may I help you?',
+            'Hi, let\'s get started, shall we?',
+            'Hey, what do you want to do?',
+            'Hello. How may I assist you?',
+            'Hi. What can I do for you?'
+        ]
+        session.send('\uD83D\uDC4B ' /* waving hand emoji */ + utils.choose(responses))
+        session.endConversation()
+    }
+).triggerAction({
+    matches: 'Greeting'
+})
+
+var documentSpecifiers = {
+    'by Sender': {
+        'handler': 'FetchDocumentBySenderDialog'
+    },
+    'by Keywords': {
+        'handler': 'FetchDocumentByKeywordsDialog'
+    },
+    'by Type': {
+        'handler': 'FetchDocumentByTypeDialog'
+    }
+}
 bot.dialog('FetchDocumentsDialog', [
     function (session, args, next) {
-        let intent = args.intent
-        let senderFromIntnet = builder.EntityRecognizer.findEntity(intent.entities,
-            'Document.Sender.Name'
+        var responses = [
+            'okay, lets get the documents.',
+            'ok, I will fetch them for you.',
+            'sure, I will get them right away.',
+            'okay, lets fetch them quickly.',
+            'ok, documents are coming right up.'
+        ]
+        session.send(utils.choose(responses))
+
+        builder.Prompts.choice(session,
+            'How do you want to specify the documents?', documentSpecifiers,
+            { listStyle: builder.ListStyle.button }
         )
+    },
+    function (session, results) {
+        var handlerDialog = documentSpecifiers[results.response.entity].handler
+        session.replaceDialog(handlerDialog)
+    }
+]).triggerAction({
+    matches: 'Documents.Fetch'
+})
 
-        session.dialogData.sender = {}
-        session.dialogData.sender.name = senderFromIntnet ? senderFromIntnet.entity : null
+bot.dialog('FetchDocumentBySenderDialog', [
+    function (session, args, next) {
+        let senderFromIntnet = null
+        if (args && args.intent) {
+            senderFromIntnet = builder.EntityRecognizer.findEntity(args && args.intent.entities,
+                'Document.Sender.Name'
+            )
+        }
+        session.dialogData.sender = senderFromIntnet ? senderFromIntnet.entity : null
 
-        session.send('Okay, lets get the documents.')
-        if (!session.dialogData.sender.name) {
-            builder.Prompts.text(session, "From which sender should I search documents?")
+        if (!session.dialogData.sender) {
+            builder.Prompts.text(session, 'From which Sender should I search documents?')
         } else {
             next()
         }
     },
     function (session, result) {
-        if (result && result.response) {
-            session.dialogData.sender.name = result.response
+        if (result.response) {
+            session.dialogData.sender = result.response
         }
 
-        session.send('Found 17 documents from %s', session.dialogData.sender.name)
-        session.endDialog()
+        session.send('Found 17 documents from %s.', session.dialogData.sender)
+        session.endConversation()
     }
 ]).triggerAction({
-    matches: 'Documents.Fetch'
+    matches: 'Documents.Fetch.BySender'
+})
+
+bot.dialog('FetchDocumentByKeywordsDialog', [
+    function (session, args, next) {
+        let keywordFromIntent = null
+        if (args && args.intent) {
+            keywordFromIntent = builder.EntityRecognizer.findEntity(args && args.intent.entities,
+                'Document.Keyword'
+            )
+        }
+        session.dialogData.keyword = keywordFromIntent ? keywordFromIntent.entity : null
+
+        if (!session.dialogData.keyword) {
+            builder.Prompts.text(session, 'For which Keywords should I search documents?')
+        } else {
+            next()
+        }
+    },
+    function (session, result) {
+        if (result.response) {
+            session.dialogData.keyword = result.response
+        }
+
+        session.send('Found 17 documents about %s.', session.dialogData.keyword)
+        session.endConversation()
+    }
+]).triggerAction({
+    matches: 'Documents.Fetch.ByKeyword'
+})
+
+bot.dialog('FetchDocumentByTypeDialog', [
+    function (session, args, next) {
+        let typeFromIntent = null
+        if (args && args.intent) {
+            typeFromIntent = builder.EntityRecognizer.findEntity(args && args.intent.entities,
+                'Document.Type'
+            )
+        }
+        session.dialogData.type = typeFromIntent ? typeFromIntent.entity : null
+
+        if (!session.dialogData.type) {
+            builder.Prompts.text(session, 'Which document types should I search?')
+        } else {
+            next()
+        }
+    },
+    function (session, result) {
+        if (result.response) {
+            session.dialogData.type = result.response
+        }
+
+        session.send('Found 17 %s documents.', session.dialogData.type)
+        session.endConversation()
+    }
+]).triggerAction({
+    matches: 'Documents.Fetch.ByType'
 })
