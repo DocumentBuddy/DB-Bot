@@ -284,7 +284,7 @@ bot.dialog('InternalResultsDialog', [
                     )
                     .text('sent by ' + sender)
                     .buttons([
-                        builder.CardAction.postBack(session, 'DL ' + element.id, 'Donwload File'),
+                        builder.CardAction.postBack(session, 'DL ' + element.id, 'Download File'),
                         builder.CardAction.postBack(session, 'SUM ' + element.id, 'Show Summary')
                     ])
                 )
