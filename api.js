@@ -6,8 +6,9 @@ exports.getDocumentsByKeyword = (session, keyword) => {
 
 
 doRequestAndSendResultDialog = (session, apiPath) => {
+    let baseUrl = process.env.apiBaseUrl || 'http://51.144.52.120:5000'
     let apiPromise = rp({
-        'uri': 'http://localhost:5000/database/api/v1.0/documents/',
+        'uri': baseUrl + '/database/api/v1.0/documents/',
         'json': true
     })
 
