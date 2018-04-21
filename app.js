@@ -105,6 +105,20 @@ bot.dialog('GreetingDialog',
     matches: 'Greeting'
 })
 
+bot.dialog('ThanksDialog',
+    (session) => {
+        var responses = [
+            'You\'re welcome.',
+            'No problem!',
+            'Nice. Can I help you with something else?'
+        ]
+        session.send(utils.choose(responses))
+        session.endConversation()
+    }
+).triggerAction({
+    matches: 'Thanks'
+})
+
 bot.dialog('DocumentUploadDialog',
     (session) => {
         if (hasMessageAttachment(session)) {
