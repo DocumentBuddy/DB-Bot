@@ -303,12 +303,21 @@ bot.dialog('InternalDownloadDialog', [
         api.sendPdfDisplay(id)
         session.endConversation()
     }
-]).triggerAction({ matches: /(DL)(\s|.)*/i });
+]).triggerAction({ matches: /(DL)(\s|.)*/i })
 
-bot.dialog('InternalSummaryDialog', [
+bot.dialog('InternalSummaryForwardDialog', [
     function (session, args, next) {
         let id = args.intent.matched[0].substr(4)
-        session.send('haha  n o  , not yet')  // TO DO later
+        api.getAndSendSummary(session, id)
+    }
+]).triggerAction({ matches: /(SUM)(\s|.)*/i })
+
+bot.dialog('InternalSummaryDialog', [
+    function (session, text, next) {
+        var msg = new builder.Message(session)
+            .text('Here is the short version of it: *%s*', text)
+            .textFormat('markdown')
+        session.send(msg)
         session.endConversation()
     }
-]).triggerAction({ matches: /(SUM)(\s|.)*/i });
+])

@@ -42,3 +42,12 @@ exports.sendPdfDisplay = (id) => {
         .then((v) => 0)
         .catch((err) => console.error(err))
 }
+
+exports.getAndSendSummary = (session, id) => {
+    rp({
+        uri: api_settings.baseUrl + '/database/api/v1.0/summary/' + id,
+        json: true
+    })
+        .then((jsonData) => session.replaceDialog('InternalSummaryDialog', jsonData.summary))
+        .catch((err) => console.error(err))
+}
