@@ -31,6 +31,7 @@ var bot = new builder.UniversalBot(connector, function (session, args) {
             '\uD83E\uDD14'  /* thinking emoji */
             + ' I don\'t understand what you mean, sorry.\nPlease try rephrasing your question.'
         )
+        console.log('[?] - ' + session.message.text)
         session.endConversation()
     }
 })
