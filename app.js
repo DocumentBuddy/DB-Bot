@@ -46,6 +46,14 @@ const LuisModelUrl =
 
 // add LUIS recognizer to the bot for reacting to intents
 var recognizer = new builder.LuisRecognizer(LuisModelUrl)
+  .onEnabled(function (session, callback) {
+    if (session.message.attachments) {
+      // -> do not send to LUIS
+      callback(null, false)
+    } else {
+      callback(null, true)
+    }
+})
 bot.recognizer(recognizer)
 
 
@@ -146,8 +154,6 @@ bot.dialog('FetchDocumentsDialog', [
 
 bot.dialog('FetchDocumentBySenderDialog', [
     function (session, args, next) {
-        session.send(msg.attachments)
-
         let senderFromIntnet = null
         if (args && args.intent) {
             senderFromIntnet = builder.EntityRecognizer.findEntity(args && args.intent.entities,
