@@ -146,6 +146,8 @@ bot.dialog('FetchDocumentsDialog', [
 
 bot.dialog('FetchDocumentBySenderDialog', [
     function (session, args, next) {
+        session.send(msg.attachments)
+
         let senderFromIntnet = null
         if (args && args.intent) {
             senderFromIntnet = builder.EntityRecognizer.findEntity(args && args.intent.entities,
