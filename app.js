@@ -24,11 +24,15 @@ server.post('/api/messages', connector.listen())
 //--- INIT BOT
 var bot = new builder.UniversalBot(connector, function (session, args) {
     // Default Handling: When nothing else matches
-    session.send(
-        '\uD83E\uDD14'  /* thinking emoji */
-        + ' I don\'t understand what you mean, sorry.\nPlease try rephrasing your question.'
-    )
-    session.endConversation()
+    if (session.message.attachments) {
+        session.replaceDialog('DocumentUploadDialog')
+    } else {
+        session.send(
+            '\uD83E\uDD14'  /* thinking emoji */
+            + ' I don\'t understand what you mean, sorry.\nPlease try rephrasing your question.'
+        )
+        session.endConversation()
+    }
 })
 bot.set('storage', inMemoryStorage)
 
@@ -87,6 +91,22 @@ bot.dialog('GreetingDialog',
     }
 ).triggerAction({
     matches: 'Greeting'
+})
+
+bot.dialog('DocumentUploadDialog',
+    (session) => {
+        let msg = session.message
+        if (msg.attachments && msg.attachments.length > 0) {
+            session.send('Thank you for `%s`', msg.attachments[0].contentUrl)
+        } else {
+            session.send(
+                'You can drop me a file at any time with the attachment-button in the lower left corner.'
+            )
+        }
+        session.endConversation()
+    }
+).triggerAction({
+    matches: 'Document.Upload'
 })
 
 var documentSpecifiers = {
