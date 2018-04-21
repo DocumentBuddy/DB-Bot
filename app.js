@@ -269,8 +269,8 @@ bot.dialog('InternalResultsDialog', [
                 //.subtitle('20.04.2017 13:37')
                 //.text('#rnv #data #hackathon')
                 .buttons([
-                    builder.CardAction.postBack(session, 'DL ' + element.link, 'Donwload File'),
-                    builder.CardAction.postBack(session, 'SUM ' + element.text, 'Show Summary')
+                    builder.CardAction.postBack(session, 'DL ' + element.id, 'Donwload File'),
+                    builder.CardAction.postBack(session, 'SUM ' + element.id, 'Show Summary')
                 ])
             )
         }
@@ -281,18 +281,16 @@ bot.dialog('InternalResultsDialog', [
 
 bot.dialog('InternalDownloadDialog', [
     function (session, args, next) {
-        let url = args.intent.matched[0].substr(3)
-        var linkMessage = new builder.Message(session)
-            .text('Here you go: [Download](%s)', url)
-            .textFormat('markdown')
-        session.send(linkMessage)
+        let id = args.intent.matched[0].substr(3)
+        session.send('Opening file in the display...')
+        api.sendPdfDisplay(id)
         session.endConversation()
     }
 ]).triggerAction({ matches: /(DL)(\s|.)*/i });
 
 bot.dialog('InternalSummaryDialog', [
     function (session, args, next) {
-        let summary = args.intent.matched[0].substr(4)
+        let id = args.intent.matched[0].substr(4)
         session.send('Here you go, summarized: %s', summary)
         session.endConversation()
     }
