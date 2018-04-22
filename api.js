@@ -7,12 +7,16 @@ exports.getDocumentsByKeyword = (session, keyword) => {
     doRequestAndSendResultDialog(session, 'keyword/like/' + keyword)
 }
 
-exports.getDocumentsByAuthor = (session, author) => {
-    doRequestAndSendResultDialog(session, 'author/like/' + author)
-}
-
 exports.getDocumentsByDoctype = (session, doctype) => {
     doRequestAndSendResultDialog(session, 'doctype/like/' + doctype)
+}
+
+exports.getDocumentsByEntity = (session, entity) => {
+    doRequestAndSendResultDialog(session, 'name_entity/like/' + entity)
+}
+
+exports.getDocumentsByPlace = (session, place) => {
+    doRequestAndSendResultDialog(session, 'place/like/' + place)
 }
 
 doRequestAndSendResultDialog = (session, apiPath) => {

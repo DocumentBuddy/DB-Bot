@@ -136,11 +136,14 @@ bot.dialog('DocumentUploadDialog',
 })
 
 var documentSpecifiers = {
-    'by Sender': {
-        'handler': 'FetchDocumentBySenderDialog'
+    'by Keyword': {
+        'handler': 'FetchDocumentByKeywordDialog'
     },
-    'by Keywords': {
-        'handler': 'FetchDocumentByKeywordsDialog'
+    'by Entity': {
+        'handler': 'FetchDocumentByEntityDialog'
+    },
+    'by Place': {
+        'handler': 'FetchDocumentByPlaceDialog'
     },
     'by Type': {
         'handler': 'FetchDocumentByTypeDialog'
@@ -170,35 +173,8 @@ bot.dialog('FetchDocumentsDialog', [
     matches: 'Documents.Fetch'
 })
 
-bot.dialog('FetchDocumentBySenderDialog', [
-    function (session, args, next) {
-        let senderFromIntnet = null
-        if (args && args.intent) {
-            senderFromIntnet = builder.EntityRecognizer.findEntity(args && args.intent.entities,
-                'Document.Sender.Name'
-            )
-        }
-        session.dialogData.sender = senderFromIntnet ? senderFromIntnet.entity : null
 
-        if (!session.dialogData.sender) {
-            builder.Prompts.text(session, 'From which Sender should I search documents?')
-        } else {
-            next()
-        }
-    },
-    function (session, result) {
-        if (result.response) {
-            session.dialogData.sender = result.response
-        }
-
-        api.getDocumentsByAuthor(session, session.dialogData.sender)
-        session.endDialog()
-    }
-]).triggerAction({
-    matches: 'Documents.Fetch.BySender'
-})
-
-bot.dialog('FetchDocumentByKeywordsDialog', [
+bot.dialog('FetchDocumentByKeywordDialog', [
     function (session, args, next) {
         let keywordFromIntent = null
         if (args && args.intent) {
@@ -209,7 +185,7 @@ bot.dialog('FetchDocumentByKeywordsDialog', [
         session.dialogData.keyword = keywordFromIntent ? keywordFromIntent.entity : null
 
         if (!session.dialogData.keyword) {
-            builder.Prompts.text(session, 'For which Keywords should I search documents?')
+            builder.Prompts.text(session, 'For which Keyword should I search documents?')
         } else {
             next()
         }
@@ -224,6 +200,62 @@ bot.dialog('FetchDocumentByKeywordsDialog', [
     }
 ]).triggerAction({
     matches: 'Documents.Fetch.ByKeyword'
+})
+
+bot.dialog('FetchDocumentByEntityDialog', [
+    function (session, args, next) {
+        let entityFromIntent = null
+        if (args && args.intent) {
+            entityFromIntent = builder.EntityRecognizer.findEntity(args && args.intent.entities,
+                'Document.Entity'
+            )
+        }
+        session.dialogData.entity = entityFromIntent ? entityFromIntent.entity : null
+
+        if (!session.dialogData.entity) {
+            builder.Prompts.text(session, 'For which Entity should I search documents?')
+        } else {
+            next()
+        }
+    },
+    function (session, result) {
+        if (result.response) {
+            session.dialogData.entity = result.response
+        }
+
+        api.getDocumentsByEntity(session, session.dialogData.entity)
+        session.endDialog()
+    }
+]).triggerAction({
+    matches: 'Documents.Fetch.ByEntity'
+})
+
+bot.dialog('FetchDocumentByPlaceDialog', [
+    function (session, args, next) {
+        let placeFromIntent = null
+        if (args && args.intent) {
+            placeFromIntent = builder.EntityRecognizer.findEntity(args && args.intent.entities,
+                'Document.Place'
+            )
+        }
+        session.dialogData.place = placeFromIntent ? placeFromIntent.entity : null
+
+        if (!session.dialogData.place) {
+            builder.Prompts.text(session, 'For which Place should I search documents?')
+        } else {
+            next()
+        }
+    },
+    function (session, result) {
+        if (result.response) {
+            session.dialogData.place = result.response
+        }
+
+        api.getDocumentsByPlace(session, session.dialogData.place)
+        session.endDialog()
+    }
+]).triggerAction({
+    matches: 'Documents.Fetch.ByPlace'
 })
 
 bot.dialog('FetchDocumentByTypeDialog', [
