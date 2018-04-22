@@ -284,8 +284,8 @@ bot.dialog('InternalResultsDialog', [
                     )
                     .text('sent by ' + sender)
                     .buttons([
-                        builder.CardAction.postBack(session, 'DL ' + element.id, 'Download File'),
-                        builder.CardAction.postBack(session, 'SUM ' + element.id, 'Show Summary')
+                        builder.CardAction.postBack(session, 'F ' + element.id, 'Show File'),
+                        builder.CardAction.postBack(session, 'S ' + element.id, 'Show Summary')
                     ])
                 )
             }
@@ -303,14 +303,14 @@ bot.dialog('InternalDownloadDialog', [
         api.sendPdfDisplay(id)
         session.endConversation()
     }
-]).triggerAction({ matches: /(DL)(\s|.)*/i })
+]).triggerAction({ matches: /(F)(\s|.)*/i })
 
 bot.dialog('InternalSummaryForwardDialog', [
     function (session, args, next) {
         let id = args.intent.matched[0].substr(4)
         api.getAndSendSummary(session, id)
     }
-]).triggerAction({ matches: /(SUM)(\s|.)*/i })
+]).triggerAction({ matches: /(S)(\s|.)*/i })
 
 bot.dialog('InternalSummaryDialog', [
     function (session, text, next) {
